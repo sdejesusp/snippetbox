@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // Define a home handler function which writes a byte slice containing
@@ -23,7 +25,15 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 // Add a snippetView handler function.
 func snippetView(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display a specific snippet..."))
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Use the fmt.Fprintf() function to interpolate the id value with our response
+	// and write it to the http.ResponseWriter.
+	fmt.Fprintf(w, "Display a specific snippet with ID %d", id)
 }
 
 // Add a snippetCreate handler function.
@@ -38,10 +48,9 @@ func snippetCreate(w http.ResponseWriter, r *http.Request) {
 		// Use the Header().Set() method to add an 'Allow: POST' header to the
 		// response header map. The first parameter is the header name, and
 		// the second parameter is the header value.
-		w.Header().Set("Allow", "POST")
+		w.Header().Set("Allow", http.MethodPost)
 
-		w.WriteHeader(405)
-		w.Write([]byte("Method Not Allowed"))
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
